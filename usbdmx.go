@@ -30,7 +30,7 @@ func ReadConfigFile(path string) (ControllerConfig, error) {
 	type raw struct {
 		VID               string `toml:"VID"`
 		PID               string `toml:"PID"`
-		OutputInterfaceID int    `toml:"outputInterfaceID"`
+		OutputInterfaceID string `toml:"outputInterfaceID"`
 		DebugLevel        int    `toml:"debugLevel"`
 	}
 	rawConf := raw{}
@@ -50,9 +50,14 @@ func ReadConfigFile(path string) (ControllerConfig, error) {
 		return conf, err
 	}
 
+	oiid, err := strconv.ParseInt(rawConf.OutputInterfaceID, 16, 16)
+	if err != nil {
+		return conf, err
+	}
+
 	conf.VID = uint16(vid)
 	conf.PID = uint16(pid)
-	conf.OutputInterfaceID = rawConf.OutputInterfaceID
+	conf.OutputInterfaceID = int(oiid)
 	conf.DebugLevel = rawConf.DebugLevel
 
 	return conf, nil
