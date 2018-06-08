@@ -19,7 +19,7 @@ func TestGetSetChannel(t *testing.T) {
 		t.Errorf("Expected error when setting channel at index 513, got nil")
 	}
 
-	if err := c.SetChannel(0, 255); err != nil {
+	if err := c.SetChannel(1, 255); err != nil {
 		t.Error(err)
 	}
 
