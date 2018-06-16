@@ -7,6 +7,13 @@ control and special effects.
 
 * DIY FT232 controller *[Steven Breuls Tutorial](https://stevenbreuls.com/2013/05/diy-usb-dmx-dongle-interface-for-under-10/)*
 
+Planned for support:
+
+* Enttec DMX USB Pro Mk2
+
+If you don't see your controller here, but would like it to be added, create an issue 
+with the name of the device and a link to any more information.
+
 ## Quick Start
 
 This will create a mock controller, set channels 1,2 and 3 to 255 and render
