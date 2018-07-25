@@ -11,7 +11,7 @@ import (
 type DMXController struct {
 	vid      uint16
 	pid      uint16
-	channels []byte
+	channels [][]byte
 	packet   []byte
 
 	ctx               *gousb.Context
@@ -26,7 +26,11 @@ type DMXController struct {
 func NewDMXController(conf usbdmx.ControllerConfig) DMXController {
 	d := DMXController{}
 
-	d.channels = make([]byte, 512)
+	// controller has multiple universes
+	d.channels = make([][]byte, 2)
+	d.channels[0] = make([]byte, 512)
+	d.channels[1] = make([]byte, 512)
+
 	d.packet = make([]byte, 518)
 
 	d.vid = conf.VID
@@ -106,33 +110,55 @@ func (d *DMXController) Connect() error {
 	d.device.Control(0x40, 0x00, 0x0002, 0x00, nil)
 	d.device.Control(0x40, 0x01, 0x0200, 0x00, nil)
 
-	d.output.Write([]byte{0x7E, 0x0A, 0x00, 0x00, 0xE7})
+	// Open universe 1 & 2 for writing
+	d.output.Write([]byte{0x7E, 0x0D, 0x04, 0x00, 0xAD, 0x88, 0xD0, 0xC8, 0xE7})
+	d.output.Write([]byte{0x7E, 0xCB, 0x02, 0x00, 0x01, 0x01, 0xE7})
 
 	return nil
 }
 
 // SetChannel sets a single DMX channel value
-func (d *DMXController) SetChannel(index int16, data byte) error {
+func (d *DMXController) SetChannel(universe int16, index int16, data byte) error {
+	if universe < 1 || universe > int16(len(d.channels)) {
+		return fmt.Errorf("Universe %d does not exist", universe)
+	}
+
 	if index < 1 || index > 512 {
 		return fmt.Errorf("Index %d out of range, must be between 1 and 512", index)
 	}
 
-	d.channels[index-1] = data
+	d.channels[universe-1][index-1] = data
 
 	return nil
 }
 
 // GetChannel returns the value of a single DMX channel
-func (d *DMXController) GetChannel(index int16) (byte, error) {
+func (d *DMXController) GetChannel(universe int16, index int16) (byte, error) {
+	if universe < 1 || universe > int16(len(d.channels)) {
+		return 0, fmt.Errorf("Universe %d does not exist", universe)
+	}
+
 	if index < 1 || index > 512 {
 		return 0, fmt.Errorf("Index %d out of range, must be between 1 and 512", index)
 	}
 
-	return d.channels[index-1], nil
+	return d.channels[universe-1][index-1], nil
 }
 
 // Render sends channel data to fixtures
 func (d *DMXController) Render() error {
+	if err := d.renderUniverseOne(); err != nil {
+		return fmt.Errorf("Error rendering universe 1: %s", err)
+	}
+
+	if err := d.renderUniverseTwo(); err != nil {
+		return fmt.Errorf("Error rendering universe 2: %s", err)
+	}
+
+	return nil
+}
+
+func (d *DMXController) renderUniverseOne() error {
 	// ENTTEC USB DMX PRO Start Message
 	d.packet[0] = 0x7E
 
@@ -146,7 +172,34 @@ func (d *DMXController) Render() error {
 
 	// Set DMX Data
 	for i := 0; i < 512; i++ {
-		d.packet[i+5] = d.channels[i]
+		d.packet[i+5] = d.channels[0][i]
+	}
+
+	// ENTTEC USB DMX PRO End Message
+	d.packet[517] = 0xE7
+
+	if _, err := d.output.Write(d.packet); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d *DMXController) renderUniverseTwo() error {
+	// ENTTEC USB DMX PRO Start Message
+	d.packet[0] = 0x7E
+
+	// Set our protocol
+	d.packet[1] = 0xa9
+
+	// Wat?
+	d.packet[2] = 0x01
+	d.packet[3] = 0x02
+	d.packet[4] = 0x00
+
+	// Set DMX Data
+	for i := 0; i < 512; i++ {
+		d.packet[i+5] = d.channels[1][i]
 	}
 
 	// ENTTEC USB DMX PRO End Message

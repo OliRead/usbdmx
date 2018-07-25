@@ -35,9 +35,9 @@ func main() {
 	// fixture, like a par can, will not be showing any light. We're ignoring
 	// errors but the SetChannel function will return an error if it fails to
 	// write to the array
-	controller.SetChannel(1, 0)
-	controller.SetChannel(2, 0)
-	controller.SetChannel(3, 0)
+	controller.SetChannel(1, 1, 0)
+	controller.SetChannel(1, 2, 0)
+	controller.SetChannel(1, 3, 0)
 
 	// Create an array of colours for our fixture to switch between
 	colours := [][]byte{
@@ -67,13 +67,13 @@ func main() {
 	// values are ouptut to stdout. Wait 2 seconds between updating our new channels
 	for i := 0; true; i++ {
 		colour := colours[i%len(colours)]
-		controller.SetChannel(1, colour[0])
-		controller.SetChannel(2, colour[1])
-		controller.SetChannel(3, colour[2])
+		controller.SetChannel(1, 1, colour[0])
+		controller.SetChannel(1, 2, colour[1])
+		controller.SetChannel(1, 3, colour[2])
 
-		r, _ := controller.GetChannel(1)
-		g, _ := controller.GetChannel(2)
-		b, _ := controller.GetChannel(3)
+		r, _ := controller.GetChannel(1, 1)
+		g, _ := controller.GetChannel(1, 2)
+		b, _ := controller.GetChannel(1, 3)
 
 		log.Printf("Ch1: %d \t Ch2: %d \t Ch3: %d", r, g, b)
 		time.Sleep(time.Second * 2)
