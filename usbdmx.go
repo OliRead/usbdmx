@@ -11,6 +11,7 @@ import (
 // Controller Generic interface for all USB DMX controllers
 type Controller interface {
 	Connect() (err error)
+	Close() error
 	GetSerial() (info string, err error)
 	GetProduct() (info string, err error)
 	SetChannel(channel int16, value byte) error

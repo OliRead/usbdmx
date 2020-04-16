@@ -25,6 +25,10 @@ func (d *DMXController) Connect() error {
 	return nil
 }
 
+func (d *DMXController) Close() error {
+	return nil
+}
+
 // SetChannel sets a single DMX channel value
 func (d *DMXController) SetChannel(index int16, data byte) error {
 	if index < 1 || index > 512 {
