@@ -77,6 +77,14 @@ func (d *DMXController) Connect() error {
 	return nil
 }
 
+func (d *DMXController) Close() error {
+	device := d.device
+	if device == nil {
+		return fmt.Errorf("not connected")
+	}
+	return device.Close()
+}
+
 // SetChannel sets a single DMX channel value
 func (d *DMXController) SetChannel(index int16, data byte) error {
 	if index < 1 || index > 512 {
